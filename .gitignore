@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+*.pyo
+.env
+backend/.env
+venv/
+.venv/
+.idea/
+.vscode/
+node_modules/
+package-lock.json

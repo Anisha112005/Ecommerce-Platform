@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ARViz — AR Product Visualizer | Place Products in Your Space</title>
+  <meta name="description" content="Experience products in your real space before buying. Visualize furniture, try on accessories, and preview paint colors using augmented reality."/>
+  <link rel="stylesheet" href="css/index.css"/>
+  <link rel="stylesheet" href="css/store.css"/>
+</head>
+<body>
+
+<!-- ── NAVBAR ───────────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+  <a href="#" class="nav-logo">
+    <div class="logo-icon">🔮</div>
+    <div class="logo-text">AR<span>Viz</span></div>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#products">Products</a></li>
+    <li><a href="#how-it-works">How It Works</a></li>
+    <li><a href="#features">Features</a></li>
+    <li><a href="#dashboard">Analytics</a></li>
+  </ul>
+  <div class="nav-auth">
+    <button class="btn-nav-login" id="btn-nav-login">👤 Sign In</button>
+    <div class="nav-user-pill hidden" id="nav-user-pill">
+      <span class="nav-user-name" id="nav-username">User</span>
+    </div>
+    <button class="btn-nav-cart" id="btn-nav-cart" title="Open Cart">
+      🛒 <div class="cart-badge" id="cart-badge-count">0</div>
+    </button>
+  </div>
+</nav>
+
+<!-- ── COMPAT BANNER ─────────────────────────────────────────── -->
+<div id="compat-banner"></div>
+
+<!-- ── HERO ─────────────────────────────────────────────────── -->
+<section class="hero">
+  <div class="hero-bg-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <div class="hero-content">
+    <div class="hero-badge"><div class="badge-dot"></div>WebXR Powered Experience</div>
+    <h1>See It In Your<br/><span class="grad-text">Real Space</span></h1>
+    <p class="hero-desc">Place furniture in your room, try on accessories, and preview paint colors — all through your camera. No app required.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" id="hero-ar-btn" onclick="document.getElementById('products').scrollIntoView({behavior:'smooth'})">
+        🔮 Start Visualizing
+      </button>
+      <a class="btn-secondary" href="#how-it-works">▶ How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="stat"><span class="stat-num">3</span><span class="stat-label">AR Modes</span></div>
+      <div class="stat"><span class="stat-num">12+</span><span class="stat-label">Products</span></div>
+      <div class="stat"><span class="stat-num">WebXR</span><span class="stat-label">Powered</span></div>
+    </div>
+  </div>
+
+  <div class="hero-visual">
+    <div class="hero-canvas-wrap">
+      <canvas id="hero-canvas"></canvas>
+      <div class="canvas-badge">🔴 Live 3D Preview</div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CATEGORIES & PRODUCTS ─────────────────────────────────── -->
+<section class="categories" id="products">
+  <div class="section-header">
+    <div class="section-tag">🛍️ Product Catalog</div>
+    <h2>Choose What to Visualize</h2>
+    <p>Select any product and tap "View in AR" to place it in your space using your camera.</p>
+  </div>
+
+  <div class="cat-tabs">
+    <button class="cat-tab active" data-cat="all" id="tab-all">✨ All Products</button>
+    <button class="cat-tab" data-cat="furniture" id="tab-furniture">🛋️ Furniture</button>
+    <button class="cat-tab" data-cat="accessories" id="tab-accessories">👓 Accessories</button>
+    <button class="cat-tab" data-cat="paint" id="tab-paint">🎨 Wall Paint</button>
+  </div>
+
+  <div class="product-grid" id="product-grid"></div>
+</section>
+
+<!-- ── HOW IT WORKS ───────────────────────────────────────────── -->
+<section class="how-it-works" id="how-it-works">
+  <div class="section-header">
+    <div class="section-tag">📖 Process</div>
+    <h2>How It Works</h2>
+    <p>Three simple steps to visualize any product in augmented reality.</p>
+  </div>
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num">1</div>
+      <span class="step-icon">👆</span>
+      <h3>Pick a Product</h3>
+      <p>Browse our catalog and select the item you want to visualize in your space.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">2</div>
+      <span class="step-icon">📷</span>
+      <h3>Open Camera</h3>
+      <p>Hit "View in AR" to launch the camera experience directly in your browser.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">3</div>
+      <span class="step-icon">🎯</span>
+      <h3>Place & Explore</h3>
+      <p>Point at a surface, tap to place, then scale and rotate to see it perfectly.</p>
+    </div>
+    <div class="step-card">
+      <div class="step-num">4</div>
+      <span class="step-icon">📸</span>
+      <h3>Capture & Share</h3>
+      <p>Screenshot your AR placement and share it with friends or your design team.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── FEATURES ───────────────────────────────────────────────── -->
+<section class="features" id="features">
+  <div class="section-header">
+    <div class="section-tag">⚡ Capabilities</div>
+    <h2>Powered by WebXR</h2>
+    <p>Enterprise-grade AR technology running directly in your browser — no downloads, no plugins.</p>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feat-icon purple">📐</div>
+      <div class="feat-body">
+        <h3>Surface Detection</h3>
+        <p>Automatically detects floors, tables, and walls for accurate product placement.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon cyan">🔄</div>
+      <div class="feat-body">
+        <h3>Scale & Rotate</h3>
+        <p>Adjust size and orientation of any placed product with intuitive controls.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon pink">👤</div>
+      <div class="feat-body">
+        <h3>Face Try-On</h3>
+        <p>TensorFlow.js face tracking places sunglasses and watches exactly on your face.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon green">🎨</div>
+      <div class="feat-body">
+        <h3>Paint Preview</h3>
+        <p>See any paint color on your walls instantly with adjustable opacity blending.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon orange">📸</div>
+      <div class="feat-body">
+        <h3>AR Screenshots</h3>
+        <p>Capture high-quality photos of your AR placement to share or save.</p>
+      </div>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon violet">🌐</div>
+      <div class="feat-body">
+        <h3>No App Needed</h3>
+        <p>Works entirely in Chrome and Safari. WebXR for mobile, webcam fallback for desktop.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── QR / MOBILE SECTION ─────────────────────────────────────── -->
+<section class="qr-section" id="mobile">
+  <div class="section-header">
+    <div class="section-tag">📱 Mobile Experience</div>
+    <h2>Best on Mobile</h2>
+    <p>Scan the QR code to experience full AR with surface detection on your phone.</p>
+  </div>
+  <div class="qr-card">
+    <div class="qr-img-wrap" id="qr-container">
+      <!-- QR generated by JS -->
+    </div>
+    <div class="qr-text">
+      <h2>Scan to Open on Mobile</h2>
+      <p>For the full AR experience with real surface detection, open this page on your Android phone (Chrome) or iPhone (Safari 16+). Point your camera at any flat surface to start placing products.</p>
+      <div class="url-pill" id="page-url-pill"></div>
+    </div>
+  </div>
+</section>
+<!-- ── AR ANALYTICS DASHBOARD ─────────────────────────────────── -->
+<section class="dashboard-section" id="dashboard">
+  <div class="section-header">
+    <div class="section-tag">📊 Live Analytics</div>
+    <h2>AR Engagement Metrics</h2>
+    <p>Real-time usage and visualization analytics pulled directly from our Flask + SQLite backend.</p>
+  </div>
+  
+  <div class="dashboard-grid">
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-icon purple">🔮</span>
+        <h3>Total Sessions</h3>
+      </div>
+      <div class="dash-stat" id="stat-total-sessions">0</div>
+      <p class="dash-desc">Visualizations started in AR</p>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-icon cyan">📈</span>
+        <h3>Conversion Rate</h3>
+      </div>
+      <div class="dash-stat" id="stat-conversion-rate">0%</div>
+      <p class="dash-desc">Sessions placing a 3D product in space</p>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-icon pink">⏱️</span>
+        <h3>Avg Duration</h3>
+      </div>
+      <div class="dash-stat" id="stat-avg-duration">0s</div>
+      <p class="dash-desc">Average seconds spent interacting in AR</p>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-card-header">
+        <span class="dash-icon orange">🏆</span>
+        <h3>Placed Sessions</h3>
+      </div>
+      <div class="dash-stat" id="stat-placed-count">0</div>
+      <p class="dash-desc">Successful product placements</p>
+    </div>
+  </div>
+
+  <div class="dashboard-details">
+    <div class="dash-detail-card top-products-card">
+      <h3>🔥 Top Visualized Products</h3>
+      <ul class="top-list" id="top-products-list">
+        <!-- populated by JS -->
+      </ul>
+    </div>
+    
+    <div class="dash-detail-card modes-card">
+      <h3>⚡ Activity by AR Mode</h3>
+      <div class="modes-list" id="modes-list">
+        <!-- populated by JS -->
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────── -->
+<footer>
+  <p>Built with <a href="https://developer.mozilla.org/en-US/docs/Web/API/WebXR_Device_API">WebXR</a> + <a href="https://threejs.org">Three.js</a> — AR Product Visualizer Demo © 2025</p>
+</footer>
+
+<!-- ── AUTH MODAL ─────────────────────────────────────────────── -->
+<div class="modal-overlay" id="auth-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="auth-title">Welcome to ARViz</h2>
+      <button class="modal-close" id="btn-auth-close">✕</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tab-login-mode">Sign In</button>
+      <button class="modal-tab" id="tab-register-mode">Register</button>
+    </div>
+    <form id="auth-form">
+      <div class="modal-error" id="auth-error">Error message</div>
+      <div class="form-group" id="group-name" style="display:none;">
+        <label for="auth-name">FULL NAME</label>
+        <input type="text" id="auth-name" placeholder="John Doe"/>
+      </div>
+      <div class="form-group">
+        <label for="auth-email">EMAIL ADDRESS</label>
+        <input type="email" id="auth-email" placeholder="demo@arviz.com" required/>
+      </div>
+      <div class="form-group">
+        <label for="auth-password">PASSWORD</label>
+        <input type="password" id="auth-password" placeholder="••••••••" required/>
+      </div>
+      <button type="submit" class="btn-modal-submit" id="btn-auth-submit">Sign In</button>
+    </form>
+    <div class="auth-divider" style="margin: 1rem 0; display: flex; align-items: center; text-align: center; color: #64748b; font-size: 0.75rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;">
+      <span style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08); margin-right: 0.8rem;"></span>
+      or continue with
+      <span style="flex: 1; border-bottom: 1px solid rgba(255,255,255,0.08); margin-left: 0.8rem;"></span>
+    </div>
+    <div style="display:flex; justify-content:center; width:100%; margin-bottom:1rem;">
+      <div id="google-signin-btn"></div>
+    </div>
+    <p class="modal-footer-text" id="auth-footer-text">
+      Log in with <strong>demo@arviz.com</strong> / <strong>demo1234</strong>
+    </p>
+  </div>
+</div>
+
+<!-- ── CART SIDEBAR ──────────────────────────────────────────── -->
+<div class="cart-overlay" id="cart-overlay">
+  <div class="cart-sidebar">
+    <div class="cart-header">
+      <h3>Shopping Cart</h3>
+      <div style="display:flex; align-items:center; gap:0.8rem;">
+        <div class="cart-count-badge" id="cart-count-badge">0</div>
+        <button class="modal-close" id="btn-cart-close">✕</button>
+      </div>
+    </div>
+    <div class="cart-body" id="cart-items-container">
+      <!-- Cart items populated by JS -->
+    </div>
+    <div class="cart-footer">
+      <div class="cart-total-row">
+        <span class="cart-total-label">Subtotal</span>
+        <span class="cart-total-val" id="cart-subtotal-val">$0.00</span>
+      </div>
+      <button class="btn-checkout" id="btn-cart-checkout">Place Order</button>
+      <button class="btn-clear-cart" id="btn-cart-clear">Clear Cart</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── ORDER SUCCESS MODAL ────────────────────────────────────── -->
+<div class="modal-overlay" id="order-success-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Order Receipt</h2>
+      <button class="modal-close" id="btn-order-close">✕</button>
+    </div>
+    <div class="order-success-body">
+      <div class="order-success-icon">🎉</div>
+      <h3>Order Placed Successfully!</h3>
+      <p>Thank you for visualizing and buying with ARViz. Your order has been registered in the database.</p>
+      <div class="order-id-pill" id="order-success-id">Order ID: #1002</div>
+    </div>
+    <button class="btn-modal-submit" style="margin-top:1.5rem;" id="btn-order-ok">Fabulous</button>
+  </div>
+</div>
+
+<!-- ── APP TOAST ─────────────────────────────────────────────── -->
+<div id="app-toast">Notification message</div>
+
+<!-- ── SCRIPTS ─────────────────────────────────────────────────── -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="js/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="js/api.js"></script>
+<script src="js/product-loader.js"></script>
+<script src="js/scene-manager.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

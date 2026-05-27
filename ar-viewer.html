@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AR Viewer — ARViz</title>
+  <meta name="description" content="AR product viewer — place products in your real space."/>
+  <link rel="stylesheet" href="css/ar.css"/>
+</head>
+<body>
+
+<!-- ── LOADING SCREEN ─────────────────────────────────────────── -->
+<div id="loading-screen">
+  <div class="loader-logo">AR<span>Viz</span></div>
+  <div class="loader-bar-wrap"><div class="loader-bar" id="loader-bar"></div></div>
+  <div class="loader-text" id="loader-text">Initializing camera…</div>
+</div>
+
+<!-- ── CAMERA FEED (background) ──────────────────────────────── -->
+<video id="camera-feed" autoplay playsinline muted></video>
+
+<!-- ── THREE.JS CANVAS (AR overlay) ──────────────────────────── -->
+<canvas id="ar-canvas"></canvas>
+
+<!-- ── FLASH EFFECT ───────────────────────────────────────────── -->
+<div id="flash"></div>
+
+<!-- ── TOP HUD ─────────────────────────────────────────────────── -->
+<div id="top-hud">
+  <div class="hud-left">
+    <a href="index.html" class="btn-exit" id="btn-exit" title="Exit AR">✕</a>
+    <div class="product-info-pill" id="product-pill">
+      <span class="p-name" id="pill-name">Loading…</span>
+      <span class="p-price" id="pill-price"></span>
+    </div>
+  </div>
+  <div class="hud-right">
+    <button class="btn-icon" id="btn-screenshot" title="Screenshot">📸</button>
+    <button class="btn-icon" id="btn-flip" title="Flip Camera">🔄</button>
+    <button class="btn-icon" id="btn-info" title="Info">ℹ️</button>
+  </div>
+</div>
+
+<!-- ── MODE TABS ──────────────────────────────────────────────── -->
+<div id="mode-tabs">
+  <div class="mode-tab active" data-mode="furniture" id="mode-furniture">🛋️ Furniture</div>
+  <div class="mode-tab" data-mode="accessories" id="mode-accessories">👓 Try-On</div>
+  <div class="mode-tab" data-mode="paint" id="mode-paint">🎨 Paint</div>
+</div>
+
+<!-- ── HINT TEXT ──────────────────────────────────────────────── -->
+<div id="hint-text">👆 Tap to place product on a surface</div>
+
+<!-- ── PLACED RING ─────────────────────────────────────────────── -->
+<div id="placed-ring"></div>
+
+<!-- ── BOTTOM PANEL ───────────────────────────────────────────── -->
+<div id="bottom-panel">
+
+  <!-- Furniture Controls -->
+  <div id="furniture-controls">
+    <div class="control-row">
+      <span class="control-label">Scale</span>
+      <input type="range" class="control-slider" id="scale-slider" min="20" max="200" value="100"/>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Rotate</span>
+      <input type="range" class="control-slider" id="rotate-slider" min="0" max="360" value="0"/>
+    </div>
+    <div class="fab-row">
+      <button class="fab primary" id="btn-place">📌 Place Here</button>
+      <button class="fab danger" id="btn-remove">🗑 Remove</button>
+    </div>
+  </div>
+
+  <!-- Accessories Controls -->
+  <div id="accessories-controls">
+    <div class="accessories-scroll" id="acc-scroll">
+      <div class="acc-item active" data-acc="sunglasses1" id="acc-sunglasses1">
+        😎<span class="acc-label">Aviator</span>
+      </div>
+      <div class="acc-item" data-acc="sunglasses2" id="acc-sunglasses2">
+        🕶️<span class="acc-label">Wayfarer</span>
+      </div>
+      <div class="acc-item" data-acc="watch1" id="acc-watch1">
+        ⌚<span class="acc-label">Classic</span>
+      </div>
+      <div class="acc-item" data-acc="watch2" id="acc-watch2">
+        🕰️<span class="acc-label">Sport</span>
+      </div>
+    </div>
+    <div class="control-row">
+      <span class="control-label">Size</span>
+      <input type="range" class="control-slider" id="acc-size-slider" min="50" max="150" value="100"/>
+    </div>
+  </div>
+
+  <!-- Paint Controls -->
+  <div id="paint-controls">
+    <div class="color-row">
+      <span class="control-label">Color</span>
+      <div class="color-swatches" id="color-swatches">
+        <div class="swatch active" data-color="#FFDAB3" style="background:#FFDAB3" title="Peach Beige"></div>
+        <div class="swatch" data-color="#B3D4FF" style="background:#B3D4FF" title="Sky Blue"></div>
+        <div class="swatch" data-color="#C8F0C8" style="background:#C8F0C8" title="Mint Green"></div>
+        <div class="swatch" data-color="#F5E6FF" style="background:#F5E6FF" title="Lavender"></div>
+        <div class="swatch" data-color="#FFE4B3" style="background:#FFE4B3" title="Warm Yellow"></div>
+        <div class="swatch" data-color="#FFB3C6" style="background:#FFB3C6" title="Blush Pink"></div>
+        <div class="swatch" data-color="#E0E0E0" style="background:#E0E0E0" title="Cloud White"></div>
+        <div class="swatch" data-color="#2D3142" style="background:#2D3142" title="Charcoal"></div>
+      </div>
+      <input type="color" id="custom-color" value="#FFDAB3" title="Custom Color"/>
+    </div>
+    <div class="opacity-row">
+      <span class="control-label">Opacity</span>
+      <input type="range" class="control-slider" id="paint-opacity" min="10" max="80" value="45"/>
+    </div>
+    <div class="toggle-row fab-row">
+      <button class="fab primary" id="btn-before-after">👁 Before / After</button>
+      <button class="fab danger" id="btn-clear-paint">✕ Clear</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ── TOAST ──────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<!-- ── SCRIPTS ─────────────────────────────────────────────────── -->
+<script src="js/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.148.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="js/api.js"></script>
+<script src="js/product-loader.js"></script>
+<script src="js/scene-manager.js"></script>
+<script src="js/hit-test.js"></script>
+<script src="js/ui-controller.js"></script>
+<script src="js/ar-session.js"></script>
+</body>
+</html>
