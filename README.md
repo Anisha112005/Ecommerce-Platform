@@ -6,6 +6,18 @@ Designed for high-performance deployment on Vercel, the application dynamically 
 
 ---
 
+## 📸 Interface Showcase
+
+| 🛋️ AR Furniture Placement | 🕶️ AR Accessory Try-On |
+| :---: | :---: |
+| ![AR Furniture Placement](assets/images/ar_furniture_preview.png) | ![AR Accessory Try-On](assets/images/ar_accessory_preview.png) |
+
+| 📊 Interactive Analytics Dashboard |
+| :---: |
+| ![Interactive Analytics Dashboard](assets/images/ar_dashboard_preview.png) |
+
+---
+
 ## 🌟 Key Features
 
 * **Three-Way AR Visualizer Modes**:
