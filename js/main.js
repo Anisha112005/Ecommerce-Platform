@@ -349,6 +349,26 @@
     authError.classList.remove('show');
   });
 
+  /**
+   * Map Firebase error codes to user-friendly messages.
+   */
+  function firebaseErrorMessage(err) {
+    const code = err.code || '';
+    const map = {
+      'auth/email-already-in-use':   'This email is already registered. Please sign in instead.',
+      'auth/invalid-email':          'Please enter a valid email address.',
+      'auth/user-disabled':          'This account has been disabled.',
+      'auth/user-not-found':         'No account found with this email. Please register first.',
+      'auth/wrong-password':         'Incorrect password. Please try again.',
+      'auth/weak-password':          'Password must be at least 6 characters.',
+      'auth/too-many-requests':      'Too many attempts. Please try again later.',
+      'auth/popup-closed-by-user':   'Sign-in popup was closed. Please try again.',
+      'auth/network-request-failed': 'Network error. Please check your connection.',
+      'auth/invalid-credential':     'Invalid credentials. Please check your email and password.',
+    };
+    return map[code] || err.message || 'Authentication failed';
+  }
+
   authForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     authError.classList.remove('show');
@@ -371,53 +391,39 @@
       updateAuthUI();
       renderGrid('all');
     } catch (err) {
-      authError.textContent = err.message || "Authentication failed";
+      authError.textContent = firebaseErrorMessage(err);
       authError.classList.add('show');
     } finally {
       authSubmitBtn.disabled = false;
     }
   });
 
-  /* ── Google OAuth Sign-in integration ────────────────────── */
-  window.handleGoogleSignIn = async function (response) {
-    console.log("[Google Auth] Identity Services token received.");
-    authError.classList.remove('show');
-    authSubmitBtn.disabled = true;
-    
-    try {
-      const data = await window.API.loginWithGoogle(response.credential);
-      window.showAppToast(`Signed in as ${data.user.name}`, "success");
-      authModal.classList.remove('open');
-      authForm.reset();
-      updateAuthUI();
-      renderGrid('all');
-    } catch (err) {
-      console.error("[Google Auth] Sign-in error:", err);
-      authError.textContent = err.message || "Google Sign-In failed";
-      authError.classList.add('show');
-    } finally {
-      authSubmitBtn.disabled = false;
-    }
-  };
+  /* ── Firebase Google Sign-In ────────────────────────────── */
+  const googleSignInBtn = document.getElementById('google-signin-btn');
+  if (googleSignInBtn) {
+    googleSignInBtn.addEventListener('click', async () => {
+      authError.classList.remove('show');
+      authSubmitBtn.disabled = true;
 
-  function initGoogleSignIn() {
-    if (window.google && window.google.accounts && window.google.accounts.id) {
-      console.log("[Google Auth] Initializing Google Identity Services...");
-      window.google.accounts.id.initialize({
-        client_id: "982738204928-abc123xyz789.apps.googleusercontent.com", // Dynamic sandbox Client ID
-        callback: window.handleGoogleSignIn,
-        auto_select: false
-      });
-      window.google.accounts.id.renderButton(
-        document.getElementById("google-signin-btn"),
-        { theme: "outline", size: "large", width: 280, shape: "pill", logo_alignment: "center" }
-      );
-    } else {
-      setTimeout(initGoogleSignIn, 500);
-    }
+      try {
+        const data = await window.API.loginWithGoogle();
+        window.showAppToast(`Signed in as ${data.user.name}`, "success");
+        authModal.classList.remove('open');
+        authForm.reset();
+        updateAuthUI();
+        renderGrid('all');
+      } catch (err) {
+        // Ignore popup-closed-by-user silently
+        if (err.code !== 'auth/popup-closed-by-user') {
+          console.error('[Firebase] Google Sign-In error:', err);
+          authError.textContent = firebaseErrorMessage(err);
+          authError.classList.add('show');
+        }
+      } finally {
+        authSubmitBtn.disabled = false;
+      }
+    });
   }
-
-  initGoogleSignIn();
 
   /* ── Shopping Cart Drawer ───────────────────────────────── */
   const cartOverlay = document.getElementById('cart-overlay');
@@ -630,6 +636,23 @@
 
   // Perform initial session status check
   updateAuthUI();
+
+  /* ── Firebase onAuthStateChanged — auto-restore sessions ── */
+  if (window.firebaseAuth) {
+    window.firebaseAuth.onAuthStateChanged(async (firebaseUser) => {
+      if (firebaseUser && !window.API.isLoggedIn()) {
+        // Firebase has a session but we don't have an app JWT — refresh it
+        try {
+          await window.API.refreshSession(firebaseUser);
+          updateAuthUI();
+          renderGrid('all');
+          console.log('[Firebase] Session auto-restored for', firebaseUser.email);
+        } catch (err) {
+          console.warn('[Firebase] Session restore failed:', err);
+        }
+      }
+    });
+  }
 
   /* ── Intersection Observer for card animations ─────────── */
   if ('IntersectionObserver' in window) {

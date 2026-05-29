@@ -11,7 +11,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from database import get_db, hash_pw, init_db
-from auth import generate_token, require_auth, optional_auth, require_admin
+from auth import generate_token, require_auth, optional_auth, require_admin, verify_firebase_token
 
 # Frontend directory (one level up from backend/)
 FRONTEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -213,6 +213,64 @@ def google_auth():
 
     token = generate_token(user["id"], user["email"], user["role"])
     return ok({"token": token, "user": user}, "Successfully authenticated with Google.")
+
+
+@app.route("/api/auth/firebase", methods=["POST"])
+def firebase_auth():
+    """Verify a Firebase ID token, find-or-create user in MongoDB, and return app JWT."""
+    body = request.get_json(silent=True) or {}
+    id_token = body.get("id_token")
+    if not id_token:
+        return err("id_token is required.", 400)
+
+    # Verify the Firebase ID token server-side
+    decoded = verify_firebase_token(id_token)
+    if not decoded:
+        return err("Invalid or expired Firebase token.", 401)
+
+    firebase_uid = decoded.get("uid", "")
+    email        = decoded.get("email", "").strip().lower()
+    name         = decoded.get("name") or decoded.get("display_name") or "Firebase User"
+    avatar       = decoded.get("picture", "")
+    provider     = decoded.get("firebase", {}).get("sign_in_provider", "unknown")
+
+    if not email:
+        return err("Email not available from Firebase token.", 400)
+
+    db = get_db()
+
+    # Try to find existing user by firebase_uid or email
+    user = db.users.find_one({"firebase_uid": firebase_uid})
+    if not user:
+        user = db.users.find_one({"email": email})
+
+    if user:
+        # Update firebase_uid and avatar if not already set
+        update_fields = {}
+        if not user.get("firebase_uid"):
+            update_fields["firebase_uid"] = firebase_uid
+        if avatar and not user.get("avatar"):
+            update_fields["avatar"] = avatar
+        if update_fields:
+            db.users.update_one({"_id": user["_id"]}, {"$set": update_fields})
+        user = row_to_dict(user)
+    else:
+        # Create new user
+        user_doc = {
+            "name": name,
+            "email": email,
+            "firebase_uid": firebase_uid,
+            "auth_provider": provider,
+            "role": "customer",
+            "avatar": avatar,
+            "created_at": datetime.now(timezone.utc).isoformat()
+        }
+        res = db.users.insert_one(user_doc)
+        user_doc["id"] = str(res.inserted_id)
+        user = row_to_dict(user_doc)
+
+    token = generate_token(user["id"], user["email"], user["role"])
+    return ok({"token": token, "user": user}, f"Authenticated via Firebase ({provider}).")
 
 
 @app.route("/api/auth/me", methods=["GET"])

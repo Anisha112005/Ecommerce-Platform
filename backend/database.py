@@ -98,6 +98,7 @@ def init_db():
       "name": "Demo User",
       "email": "demo@arviz.com",
       "password_hash": hash_pw("demo1234"),
+      "firebase_uid": "",
       "role": "customer",
       "avatar": "",
       "created_at": datetime.now(timezone.utc).isoformat()

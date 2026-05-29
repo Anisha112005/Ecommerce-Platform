@@ -1,6 +1,7 @@
 /**
  * api.js  —  Frontend API client for the ARViz backend
- * Base URL: http://localhost:5000
+ * Now uses Firebase Authentication for sign-in flows,
+ * then exchanges the Firebase ID token for an app-level JWT via /api/auth/firebase.
  */
 
 window.API = (function () {
@@ -46,29 +47,88 @@ window.API = (function () {
   const put    = (p, b) => req('PUT',    p, b);
   const del    = (p)    => req('DELETE', p);
 
-  /* ── Auth ──────────────────────────────────────────────── */
+  /* ── Firebase Auth Helpers ─────────────────────────────── */
+
+  /**
+   * Exchange a Firebase ID token for an app-level JWT from our backend.
+   * The backend verifies the token with Firebase Admin SDK, finds-or-creates
+   * the user in MongoDB, and returns { token, user }.
+   */
+  async function _exchangeFirebaseToken(firebaseUser) {
+    const idToken = await firebaseUser.getIdToken(true);
+    const res = await post('/auth/firebase', { id_token: idToken });
+    setToken(res.data.token);
+    setUser(res.data.user);
+    return res.data;
+  }
+
+  /**
+   * Register a new user with email and password via Firebase Auth,
+   * then exchange the Firebase ID token for an app-level JWT.
+   */
   async function register(name, email, password) {
-    const res = await post('/auth/register', { name, email, password });
-    setToken(res.data.token);
-    setUser(res.data.user);
-    return res.data;
+    if (!window.firebaseAuth) {
+      // Fallback to legacy endpoint if Firebase is not loaded
+      const res = await post('/auth/register', { name, email, password });
+      setToken(res.data.token);
+      setUser(res.data.user);
+      return res.data;
+    }
+
+    const credential = await window.firebaseAuth.createUserWithEmailAndPassword(email, password);
+    // Update the Firebase profile with the display name
+    await credential.user.updateProfile({ displayName: name });
+    return await _exchangeFirebaseToken(credential.user);
   }
 
+  /**
+   * Sign in with email and password via Firebase Auth,
+   * then exchange the Firebase ID token for an app-level JWT.
+   */
   async function login(email, password) {
-    const res = await post('/auth/login', { email, password });
-    setToken(res.data.token);
-    setUser(res.data.user);
-    return res.data;
+    if (!window.firebaseAuth) {
+      // Fallback to legacy endpoint if Firebase is not loaded
+      const res = await post('/auth/login', { email, password });
+      setToken(res.data.token);
+      setUser(res.data.user);
+      return res.data;
+    }
+
+    const credential = await window.firebaseAuth.signInWithEmailAndPassword(email, password);
+    return await _exchangeFirebaseToken(credential.user);
   }
 
-  async function loginWithGoogle(idToken) {
-    const res = await post('/auth/google', { id_token: idToken });
-    setToken(res.data.token);
-    setUser(res.data.user);
-    return res.data;
+  /**
+   * Sign in with Google via Firebase Auth popup,
+   * then exchange the Firebase ID token for an app-level JWT.
+   */
+  async function loginWithGoogle() {
+    if (!window.firebaseAuth || !window.googleAuthProvider) {
+      throw new Error('Firebase not initialized. Cannot use Google Sign-In.');
+    }
+
+    const result = await window.firebaseAuth.signInWithPopup(window.googleAuthProvider);
+    return await _exchangeFirebaseToken(result.user);
   }
 
-  function logout() { clearToken(); clearUser(); }
+  /**
+   * Sign out from both Firebase and the local app session.
+   */
+  function logout() {
+    clearToken();
+    clearUser();
+    if (window.firebaseAuth) {
+      window.firebaseAuth.signOut().catch(e => console.warn('[API] Firebase signOut error:', e));
+    }
+  }
+
+  /**
+   * Re-authenticate the current Firebase user and refresh the app JWT.
+   * Used by onAuthStateChanged to silently restore sessions.
+   */
+  async function refreshSession(firebaseUser) {
+    return await _exchangeFirebaseToken(firebaseUser);
+  }
 
   async function getMe() {
     const res = await get('/auth/me');
@@ -123,7 +183,7 @@ window.API = (function () {
     getUser,  setUser,  clearUser,
     isLoggedIn,
     // auth
-    register, login, loginWithGoogle, logout, getMe,
+    register, login, loginWithGoogle, logout, refreshSession, getMe,
     // products
     getProducts, getProduct,
     // cart

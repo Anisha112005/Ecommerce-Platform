@@ -1,7 +1,7 @@
 """
-auth.py  —  JWT token helpers + auth decorator
+auth.py  —  JWT token helpers + auth decorator + Firebase token verification
 """
-import jwt, functools, os
+import jwt, functools, os, json, base64
 from datetime import datetime, timedelta, timezone
 from flask import request, jsonify
 from database import get_db
@@ -11,6 +11,70 @@ SECRET = os.environ.get("JWT_SECRET", "arviz-super-secret-key-2025-ecommerce-pla
 ALGO   = "HS256"
 EXPIRY = 7  # days
 
+# ─── Firebase Admin SDK initialization ────────────────────────
+_firebase_app = None
+
+def _init_firebase():
+  """Lazily initialize Firebase Admin SDK using env-based credentials."""
+  global _firebase_app
+  if _firebase_app is not None:
+    return _firebase_app
+
+  try:
+    import firebase_admin
+    from firebase_admin import credentials
+
+    # Option 1: Base64-encoded service account JSON in env var
+    sa_b64 = os.environ.get("FIREBASE_SERVICE_ACCOUNT_B64", "")
+    sa_json = os.environ.get("FIREBASE_SERVICE_ACCOUNT", "")
+
+    if sa_b64:
+      sa_dict = json.loads(base64.b64decode(sa_b64).decode("utf-8"))
+      cred = credentials.Certificate(sa_dict)
+    elif sa_json:
+      # Could be a JSON string or a file path
+      if sa_json.startswith("{"):
+        sa_dict = json.loads(sa_json)
+        cred = credentials.Certificate(sa_dict)
+      else:
+        cred = credentials.Certificate(sa_json)
+    else:
+      # Option 2: Default credentials (works on GCP / Firebase emulator)
+      cred = credentials.ApplicationDefault() if os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") else None
+
+    if cred:
+      _firebase_app = firebase_admin.initialize_app(cred)
+      print("[OK] Firebase Admin SDK initialized with service account.")
+    else:
+      _firebase_app = firebase_admin.initialize_app()
+      print("[OK] Firebase Admin SDK initialized with default credentials.")
+
+  except Exception as e:
+    print(f"[WARN] Firebase Admin SDK init failed: {e}. Firebase token verification will be unavailable.")
+    _firebase_app = False  # Sentinel to avoid repeated init attempts
+
+  return _firebase_app
+
+
+def verify_firebase_token(id_token: str) -> dict | None:
+  """
+  Verify a Firebase ID token and return the decoded claims.
+  Returns None if verification fails or Firebase is not configured.
+  """
+  app = _init_firebase()
+  if not app:
+    return None
+
+  try:
+    from firebase_admin import auth as fb_auth
+    decoded = fb_auth.verify_id_token(id_token)
+    return decoded
+  except Exception as e:
+    print(f"[Firebase] Token verification failed: {e}")
+    return None
+
+
+# ─── App-level JWT helpers (unchanged) ────────────────────────
 
 def generate_token(user_id: int, email: str, role: str) -> str:
   payload = {
