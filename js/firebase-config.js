@@ -1,18 +1,15 @@
 /**
  * firebase-config.js — Firebase SDK Initialization for ARViz
- *
- * ⚠️  Replace the placeholder values below with your real Firebase project config.
- *     You can find these in the Firebase Console:
- *     Project Settings → General → Your apps → Web app → SDK setup and configuration
  */
 
 const firebaseConfig = {
-  apiKey:            "AIzaSyDEMO_PLACEHOLDER_KEY_REPLACE_ME",
-  authDomain:        "your-project-id.firebaseapp.com",
-  projectId:         "your-project-id",
-  storageBucket:     "your-project-id.appspot.com",
-  messagingSenderId: "000000000000",
-  appId:             "1:000000000000:web:abcdef1234567890"
+  apiKey:            "AIzaSyCOqkx2oyxAtP8s9V-8vUnPHulRcluDK8M",
+  authDomain:        "ecommerce-platform-a4aa6.firebaseapp.com",
+  projectId:         "ecommerce-platform-a4aa6",
+  storageBucket:     "ecommerce-platform-a4aa6.firebasestorage.app",
+  messagingSenderId: "173643812165",
+  appId:             "1:173643812165:web:f5b9860c7730b994bd822c",
+  measurementId:     "G-L4BCMYFGW2"
 };
 
 // Initialize Firebase
